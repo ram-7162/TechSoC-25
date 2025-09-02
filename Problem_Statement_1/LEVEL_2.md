@@ -1,12 +1,110 @@
-### Level 2 (BONUS): The Smart Cipher Breaker
-**The Challenge:** You've intercepted an encoded message, but you don't know the shift value. Create an intelligent function that can automatically find the correct shift by analyzing letter frequencies.
+#include <iostream>
+#include <string>
+#include <vector>
+const double ENGLISH_FREQUENCIES[26] = {
+    0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015, // A-G
+    0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749, // H-N
+    0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758, // O-U
+    0.00978, 0.02360, 0.00150, 0.01974, 0.00074 // V-Z
+};
+vector<double> calculateFrequencies(const string& st) {
+    vector<double> vec(26, 0.0);
+    int totalLetters = 0;
+    for (char ch : st) {
+        if (ch >= 'a' && ch <= 'z') {
+            vec[ch - 'a']++;
+            totalLetters++;
+        } else if (ch >= 'A' && ch <= 'Z') {
+            vec[ch - 'A']++;
+            totalLetters++;
+        }
+    }
+    if (totalLetters >= 0) {
+        for (int i = 0; i < 26; i++) {
+            vec[i] /= totalLetters;
+        }
+    }
+    return vec;
+}
 
-**The Problem:** English letters appear with different frequencies (E is most common, Z is least common). Your decoder should:
-- Try all possible shifts (1-25)
-- Score each result based on how closely it matches English letter frequency patterns
-- Automatically return the most likely correct decryption
-- Develop your own algorithm to score sentences which resemble English
+double scoreText(const string& st) {
+    vector<double> currentFrequencies = calculateFrequencies(st);
+    double score = 0.0;
+    for (int i = 0; i < 26; ++i) {
+        score += pow(currentFrequencies[i] - ENGLISH_FREQUENCIES[i], 2);
+    }
+    return score;
+}
 
-> [!TIP]
-> **Think About:** 
-> How can you determine if a decoded message "looks like" English? What makes one decryption more likely than another?
+bool isUppercase(char ch){
+if(ch>='a' && ch<='z'){
+   return false;
+}else{
+    return true;
+}
+return true;
+}
+string decryptCaesar(const string& cipherText, int shift){
+     string decryptedText = "";
+        for(int i=0 ;i<(int)cipherText.length(); i++){
+        char ch = cipherText[i];
+        if(ch<'a' && ch>'Z' ){
+          decryptedText += ch; 
+        }else if(ch<'A'){
+        decryptedText += ch; 
+        }else if(ch>'z'){
+          decryptedText += ch; 
+        }
+       else if(isUppercase(ch)){
+        ch-=shift;
+        if(ch<'A' ){
+            if(int(ch)!=64){
+           int i =26 - (int(ch)+14)%26 ;
+          ch = 'Z';
+          ch-=i;
+        }else{
+            ch = 'Z';
+        }
+    }
+       decryptedText += ch; 
+    }else{
+      ch-=shift;
+         if(ch<'a' ){
+            if(int(ch)!=96){
+          int i = 26 - (int(ch)+8)%26;
+          ch = 'z';
+          ch-=(i);
+        }else{
+ ch = 'z';
+        }
+        decryptedText += ch; 
+    }
+}
+  return decryptedText;
+}
+}
+
+int main() {
+    string cipherText;
+    cout << "Enter the ciphertext: ";
+    getline(cin, cipherText);
+
+    double bestScore = INT8_MAX;
+    string bestDecryption = "";
+    int bestShift = -1;
+
+    for (int shift = 0; shift < 26; ++shift) {
+        string currentDecryption = decryptCaesar(cipherText, shift);
+        double currentScore = scoreText(currentDecryption);
+
+        if (currentScore < bestScore) { 
+            bestScore = currentScore;
+            bestDecryption = currentDecryption;
+            bestShift = shift;
+        }
+    }
+    cout << "\n Best possible decryption :" << endl;
+    cout << "Shift : " << bestShift << endl;
+    cout << "Decrypted Text : " << bestDecryption << endl;
+    return 0;
+}
